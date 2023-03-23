@@ -25,9 +25,8 @@ pub struct Patch {
     injected: bool,
 }
 
-// Patch::new(PatchType::Call, 0xDEADBEEF, 6, game_loop_hook)
-
 impl Patch {
+    // Patch::new(PatchType::Call, 0xDEADBEEF, 6, game_loop_hook as i32)
     pub fn new(patch_type: PatchType, offset: usize, length: usize, function: i32) -> Self {
         Self {
             patch_type,

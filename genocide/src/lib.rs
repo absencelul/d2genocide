@@ -1,13 +1,10 @@
 #![feature(asm_const)]
 #![feature(naked_functions)]
 use core::ffi::c_void;
-
 use hack::Hack;
 use winapi::{
     shared::minwindef::{BOOL, HINSTANCE, TRUE},
-    um::{
-        winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
-    },
+    um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
 };
 
 #[cfg(feature = "logging")]

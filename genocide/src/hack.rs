@@ -7,6 +7,7 @@ use crate::{
     utils::console,
 };
 
+#[allow(dead_code)]
 pub struct Hack {
     patches: Vec<Patch>,
     hmodule: HINSTANCE,
@@ -52,7 +53,9 @@ impl Hack {
 
     pub fn detach(&mut self) -> BOOL {
         self.eject_patches();
+
         console::free_console();
+
         TRUE
     }
 }
