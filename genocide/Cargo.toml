@@ -9,9 +9,26 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4.17"
-windows = { version = "0.46.0", features = [
-    "Win32_Foundation",
-    "Win32_System_SystemServices",
-    "Win32_UI_WindowsAndMessaging",
+winapi = { version = "0.3.9", features = [
+    "minwindef",
+    "memoryapi",
+    "consoleapi",
+    "libloaderapi",
+    "winnt",
+    "wincon",
+    "winuser",
+    "processthreadsapi",
+    "handleapi",
+    "psapi",
+    "heapapi",
+    "synchapi"
 ] }
+log = "0.4.17"
+simple-logging = { version = "2.0.2", optional = true }
+log-panics = { version = "2.1.0", features = ["with-backtrace"], optional = true }
+appdirs = "0.2.0"
+lazy_static = "1.4.0"
+
+[features]
+default = []
+logging = ["simple-logging", "log-panics"]

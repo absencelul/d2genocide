@@ -1,44 +1,35 @@
+#![feature(asm_const)]
+#![feature(naked_functions)]
 use core::ffi::c_void;
-use windows::{
-    s,
-    Win32::{
-        Foundation::{BOOL, HINSTANCE, HWND, TRUE},
-        System::SystemServices::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
-        UI::WindowsAndMessaging::MessageBoxA,
+
+use hack::Hack;
+use winapi::{
+    shared::minwindef::{BOOL, HINSTANCE, TRUE},
+    um::{
+        winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
     },
 };
 
-fn attach() -> BOOL {
-    unsafe {
-        // do some stuff
-        MessageBoxA(
-            HWND(0),
-            s!("Injected"),
-            s!("genocide.dll"),
-            Default::default(),
-        );
-        TRUE
-    }
-}
+#[cfg(feature = "logging")]
+mod logging;
 
-fn detach() -> BOOL {
-    unsafe {
-        // do some stuff
-        MessageBoxA(
-            HWND(0),
-            s!("Detaching"),
-            s!("genocide.dll"),
-            Default::default(),
-        );
-        TRUE
-    }
-}
+mod d2;
+mod hack;
+mod memory;
+mod utils;
 
 #[no_mangle]
-extern "stdcall" fn DllMain(_hmodule: HINSTANCE, reason: u32, _reserved: *mut c_void) -> BOOL {
+extern "stdcall" fn DllMain(hmodule: HINSTANCE, reason: u32, _reserved: *mut c_void) -> BOOL {
+    let mut hack = Hack::new(hmodule);
     match reason {
-        DLL_PROCESS_ATTACH => attach(),
-        DLL_PROCESS_DETACH => detach(),
-        _ => TRUE,
-    }
+        DLL_PROCESS_ATTACH => {
+            hack.attach();
+        }
+        DLL_PROCESS_DETACH => {
+            hack.detach();
+        }
+        _ => {}
+    };
+
+    TRUE
 }
