@@ -2,7 +2,7 @@ use log::info;
 use winapi::shared::minwindef::{BOOL, HINSTANCE, TRUE};
 
 use crate::{
-    d2::hooks,
+    d2::stubs,
     memory::patch::{Patch, PatchType},
     utils::console,
 };
@@ -16,12 +16,15 @@ pub struct Hack {
 impl Hack {
     pub fn new(hmodule: HINSTANCE) -> Self {
         Self {
-            patches: vec![Patch::new(
-                PatchType::Call,
-                0x4F28B,
-                6,
-                hooks::game_loop_hook as i32,
-            )],
+            patches: vec![
+                Patch::new(PatchType::Jump, 0x5ADB3, stubs::draw_automap_hook as i32, 5),
+                Patch::new(
+                    PatchType::Jump,
+                    0x572D8,
+                    stubs::draw_interface_hook as i32,
+                    6,
+                ),
+            ],
             hmodule,
         }
     }

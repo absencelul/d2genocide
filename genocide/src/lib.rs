@@ -1,10 +1,13 @@
-#![feature(asm_const)]
 #![feature(naked_functions)]
+#![feature(c_variadic)]
 use core::ffi::c_void;
 use hack::Hack;
 use winapi::{
     shared::minwindef::{BOOL, HINSTANCE, TRUE},
-    um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
+    um::{
+        libloaderapi::DisableThreadLibraryCalls,
+        winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
+    },
 };
 
 #[cfg(feature = "logging")]
@@ -20,6 +23,7 @@ extern "stdcall" fn DllMain(hmodule: HINSTANCE, reason: u32, _reserved: *mut c_v
     let mut hack = Hack::new(hmodule);
     match reason {
         DLL_PROCESS_ATTACH => {
+            unsafe { DisableThreadLibraryCalls(hmodule) };
             hack.attach();
         }
         DLL_PROCESS_DETACH => {

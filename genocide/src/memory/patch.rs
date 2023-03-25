@@ -26,8 +26,7 @@ pub struct Patch {
 }
 
 impl Patch {
-    // Patch::new(PatchType::Call, 0xDEADBEEF, 6, game_loop_hook as i32)
-    pub fn new(patch_type: PatchType, offset: usize, length: usize, function: i32) -> Self {
+    pub fn new(patch_type: PatchType, offset: usize, function: i32, length: usize) -> Self {
         Self {
             patch_type,
             offset,
@@ -45,7 +44,6 @@ impl Patch {
                 debug!("GetModuleHandleA failed");
                 return 0;
             }
-
             (dll as usize) + self.offset
         }
     }
@@ -97,7 +95,7 @@ impl Patch {
                 &mut protect,
             );
 
-            std::ptr::copy_nonoverlapping(new_bytes.as_ptr(), address as *mut _, self.length);
+            std::ptr::copy(new_bytes.as_ptr(), address as *mut _, self.length);
 
             VirtualProtect(address as *mut _, self.length, protect, &mut protect);
         }
