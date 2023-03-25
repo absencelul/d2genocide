@@ -2,7 +2,7 @@ use smallvec::SmallVec;
 use std::mem::transmute;
 use widestring::WideCString;
 
-use super::game::get_screen_size_x;
+use super::game::{get_screen_size_x, GameInfo};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
@@ -100,27 +100,35 @@ impl Draw {
 pub extern "C" fn on_draw_interface() {}
 
 pub extern "C" fn on_draw_automap() {
-    // Hardcode some game info to the screen
-    let info = vec![
-        "FPS: 60, Skip: 0, Ping: 0",
-        "Game: ",
-        "Password: ",
-        "Area: ",
-        "v 1.14d",
-        "Difficulty: ",
-        "EXPANSION",
-    ];
+    let game_info = GameInfo::get();
+    if let Some(game_info) = game_info {
+        let mut info = Vec::new();
+        // Hardcode some game info to the screen
+        info.push("FPS: 200, Skip: 0, Ping: 15");
+        let game_name = format!("Game: {}", game_info.get_game_name());
+        if game_info.get_game_name().len() > 0 {
+            info.push(&game_name);
+        }
+        let game_password = format!("Password: {}", game_info.get_game_password());
+        if game_info.get_game_password().len() > 0 {
+            info.push(&game_password);
+        }
+        info.push("Area: ");
+        info.push("v 1.14d");
+        info.push("Difficulty: ");
+        info.push("EXPANSION");
 
-    let mut y = 0;
-    info.iter().for_each(|&msg| {
-        y += 16;
-        Draw::draw_text(
-            (get_screen_size_x().unwrap() - 18).try_into().unwrap(),
-            y,
-            TextColor::Gold,
-            Alignment::Right,
-            1,
-            msg,
-        );
-    });
+        let mut y = 0;
+        info.iter().for_each(|&msg| {
+            y += 16;
+            Draw::draw_text(
+                (get_screen_size_x().unwrap() - 18).try_into().unwrap(),
+                y,
+                TextColor::Gold,
+                Alignment::Right,
+                1,
+                msg,
+            );
+        });
+    }
 }
