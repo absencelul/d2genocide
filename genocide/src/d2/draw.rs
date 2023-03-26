@@ -33,8 +33,24 @@ pub enum Alignment {
     Top = 4,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+#[allow(unused)]
+pub enum Transparency {
+    ThreeFourths,
+    Half,
+    OneFourth,
+    White,
+    Black,
+    Normal,
+    Screen,
+    Highlight,
+    Full,
+}
+
 pub struct Draw {}
 
+#[allow(dead_code)]
 impl Draw {
     fn text_height_by_font(font: u8) -> u32 {
         let height: [u32; 14] = [10, 11, 18, 24, 10, 13, 7, 13, 10, 12, 8, 8, 7, 12];
@@ -48,6 +64,17 @@ impl Draw {
             let wide_str = wide_str.into_raw();
             let result =
                 transmute::<usize, GetTextWidthFileNoFn>(0x502520)(wide_str, width, file_no);
+            let _ = WideCString::from_raw(wide_str);
+            result
+        }
+    }
+
+    fn get_text_width(msg: &str) -> u32 {
+        type GetTextWidthFn = extern "fastcall" fn(*const u16) -> u32;
+        unsafe {
+            let wide_str = WideCString::from_str(msg).unwrap();
+            let wide_str = wide_str.into_raw();
+            let result = transmute::<usize, GetTextWidthFn>(0x501820)(wide_str);
             let _ = WideCString::from_raw(wide_str);
             result
         }
@@ -94,6 +121,41 @@ impl Draw {
             Self::set_text_size(size);
         }
     }
+
+    pub fn draw_box(x: u32, y: u32, width: u32, height: u32, color: u32, trans: Transparency) {
+        type DrawBoxFn = extern "stdcall" fn(u32, u32, u32, u32, u32, u32) -> bool;
+        unsafe {
+            transmute::<usize, DrawBoxFn>(0x4F6300)(
+                x,
+                y,
+                x + width,
+                y + height,
+                color,
+                trans as u32,
+            );
+        }
+    }
+
+    pub fn draw_line(x1: u32, y1: u32, x2: u32, y2: u32, color: u32) {
+        type DrawLineFn = extern "stdcall" fn(u32, u32, u32, u32, u32, i32);
+        unsafe { transmute::<usize, DrawLineFn>(0x4F6380)(x1, y1, x2, y2, color, -1) };
+    }
+
+    pub fn draw_bordered_box(
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        border_color: u32,
+        background_color: u32,
+        trans: Transparency,
+    ) {
+        Self::draw_box(x, y, width, height, background_color, trans);
+        Self::draw_line(x, y, x + width, y, border_color);
+        Self::draw_line(x, y, x, y + height, border_color);
+        Self::draw_line(x + width, y, x + width, y + height, border_color);
+        Self::draw_line(x, y + height, x + width, y + height, border_color);
+    }
 }
 
 // TODO: Move these to a plugin
@@ -130,5 +192,9 @@ pub extern "C" fn on_draw_automap() {
                 msg,
             );
         });
+
+        // Draw::draw_box(100, 100, 200, 200, TextColor::Gold, Transparency::Normal);
+        // Draw::draw_line(100, 100, 200, 200, TextColor::White);
+        // Draw::draw_bordered_box(100, 100, 100, 100, 4, 0, Transparency::ThreeFourths);
     }
 }

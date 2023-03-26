@@ -1,4 +1,7 @@
 use std::{ffi::c_char, mem::transmute};
+use widestring::WideCString;
+
+use super::draw::TextColor;
 
 pub fn get_screen_size_x() -> Option<u32> {
     let x: *const u32 = 0x71146C as *const u32;
@@ -8,12 +11,44 @@ pub fn get_screen_size_x() -> Option<u32> {
     Some(unsafe { *x })
 }
 
+#[allow(dead_code)]
 pub fn get_screen_size_y() -> Option<u32> {
     let y: *const u32 = 0x711470 as *const u32;
     if y.is_null() {
         return None;
     }
     Some(unsafe { *y })
+}
+
+fn print_game_string(msg: &str, color: TextColor) {
+    type PrintGameStringFn = extern "fastcall" fn(*const u16, i32);
+    unsafe {
+        let wide_str = WideCString::from_str(msg).unwrap();
+        let wide_str = wide_str.into_raw();
+        transmute::<usize, PrintGameStringFn>(0x49E3A0)(wide_str, color as i32);
+        let _ = WideCString::from_raw(wide_str);
+    }
+}
+
+fn print_party_string(msg: &str, color: TextColor) {
+    type PrintPartyStringFn = extern "fastcall" fn(*const u16, i32);
+    unsafe {
+        let wide_str = WideCString::from_str(msg).unwrap();
+        let wide_str = wide_str.into_raw();
+        transmute::<usize, PrintPartyStringFn>(0x49E5C0)(wide_str, color as i32);
+        let _ = WideCString::from_raw(wide_str);
+    }
+}
+
+#[allow(dead_code)]
+pub fn print(bottom: bool, color: TextColor, msg: &str) {
+    if msg.len() == 0 {
+        return;
+    }
+    match bottom {
+        true => print_party_string(msg, color),
+        false => print_game_string(msg, color),
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +64,7 @@ pub struct GameInfo {
     pub game_password: [c_char; 18],  // 0x0245
 }
 
+#[allow(dead_code)]
 impl GameInfo {
     pub fn get() -> Option<GameInfo> {
         unsafe {
