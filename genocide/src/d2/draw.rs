@@ -2,7 +2,10 @@ use smallvec::SmallVec;
 use std::mem::transmute;
 use widestring::WideCString;
 
-use super::game::{get_screen_size_x, GameInfo};
+use super::{
+    game::{get_screen_size_x, GameInfo},
+    unit::Unit,
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
@@ -159,7 +162,34 @@ impl Draw {
 }
 
 // TODO: Move these to a plugin
-pub extern "C" fn on_draw_interface() {}
+pub extern "C" fn on_draw_interface() {
+    // if revealed_areas
+    let player = Unit::get();
+    if let Some(player) = player {
+        let player_class = player.get_player_class().unwrap();
+        Draw::draw_text(
+            150,
+            100,
+            TextColor::Gold,
+            Alignment::Center,
+            1,
+            &format!(
+                "Player class: {:?}, type: {:?}",
+                player_class, player.unit_type
+            ),
+        );
+
+        let player_pos = player.pos();
+        Draw::draw_text(
+            150,
+            120,
+            TextColor::Gold,
+            Alignment::Center,
+            1,
+            &format!("Player pos: {:?}", player_pos),
+        );
+    }
+}
 
 pub extern "C" fn on_draw_automap() {
     let game_info = GameInfo::get();
