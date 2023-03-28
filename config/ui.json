@@ -1,0 +1,37 @@
+{
+  "automap": [
+    {
+      "x": 582,
+      "y": 16,
+      "color": "Gold",
+      "alignment": "Right",
+      "font": 1,
+      "message": "FPS: {fps}, Skip: {skip}, Ping: {ping}"
+    },
+    {
+      "x": 582,
+      "y": 32,
+      "color": "Gold",
+      "alignment": "Right",
+      "font": 1,
+      "message": "Game: {game_name}"
+    },
+    {
+      "x": 582,
+      "y": 48,
+      "color": "Gold",
+      "alignment": "Right",
+      "font": 1,
+      "message": "Password: {game_password}"
+    },
+    {
+      "x": 582,
+      "y": 64,
+      "color": "Gold",
+      "alignment": "Right",
+      "font": 1,
+      "message": "Difficulty: {game_difficulty}"
+    }
+  ],
+  "screen": []
+}

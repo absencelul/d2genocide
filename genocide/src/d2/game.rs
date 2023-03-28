@@ -3,6 +3,31 @@ use widestring::WideCString;
 
 use super::draw::TextColor;
 
+pub fn get_ping() -> Option<u32> {
+    let ping: *const u32 = 0x7A04A4 as *const u32;
+    if ping.is_null() {
+        return None;
+    }
+    Some(unsafe { *ping })
+}
+
+pub fn get_fps() -> Option<u32> {
+    let fps: *const u32 = 0x7BB390 as *const u32;
+    if fps.is_null() {
+        return None;
+    }
+    Some(unsafe { *fps })
+}
+
+pub fn get_skip() -> Option<u32> {
+    let skip: *const u32 = 0x7A04B0 as *const u32;
+    if skip.is_null() {
+        return None;
+    }
+    Some(unsafe { *skip })
+}
+
+#[allow(dead_code)]
 pub fn get_screen_size_x() -> Option<u32> {
     let x: *const u32 = 0x71146C as *const u32;
     if x.is_null() {
@@ -19,6 +44,8 @@ pub fn get_screen_size_y() -> Option<u32> {
     }
     Some(unsafe { *y })
 }
+
+// pub fn get_level_name(level_id)
 
 fn print_game_string(msg: &str, color: TextColor) {
     type PrintGameStringFn = extern "fastcall" fn(*const u16, i32);
@@ -105,5 +132,33 @@ impl GameInfo {
         unsafe { std::ffi::CStr::from_ptr(self.game_password.as_ptr()) }
             .to_str()
             .unwrap()
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Difficulty {
+    Normal = 0,
+    Nightmare = 1,
+    Hell = 2,
+}
+
+impl Difficulty {
+    fn to_string(&self) -> &str {
+        match self {
+            Difficulty::Normal => "Normal",
+            Difficulty::Nightmare => "Nightmare",
+            Difficulty::Hell => "Hell",
+        }
+    }
+
+    pub fn get() -> Option<&'static str> {
+        let difficulty = unsafe { transmute::<usize, fn() -> u8>(0x44DCD0)() };
+
+        match difficulty {
+            0 => Some(Difficulty::Normal.to_string()),
+            1 => Some(Difficulty::Nightmare.to_string()),
+            2 => Some(Difficulty::Hell.to_string()),
+            _ => None,
+        }
     }
 }

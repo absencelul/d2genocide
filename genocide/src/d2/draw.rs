@@ -1,13 +1,15 @@
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
-use std::mem::transmute;
+use std::{collections::HashMap, mem::transmute};
 use widestring::WideCString;
 
 use super::{
-    game::{get_screen_size_x, GameInfo},
+    game::{get_fps, get_ping, get_skip, Difficulty, GameInfo},
     unit::Unit,
 };
+use crate::hack::CONFIG;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[repr(u8)]
 #[allow(unused)]
 pub enum TextColor {
@@ -26,7 +28,7 @@ pub enum TextColor {
     Silver = 15,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[repr(u8)]
 #[allow(unused)]
 pub enum Alignment {
@@ -53,7 +55,6 @@ pub enum Transparency {
 
 pub struct Draw {}
 
-#[allow(dead_code)]
 impl Draw {
     fn text_height_by_font(font: u8) -> u32 {
         let height: [u32; 14] = [10, 11, 18, 24, 10, 13, 7, 13, 10, 12, 8, 8, 7, 12];
@@ -72,6 +73,7 @@ impl Draw {
         }
     }
 
+    #[allow(dead_code)]
     fn get_text_width(msg: &str) -> u32 {
         type GetTextWidthFn = extern "fastcall" fn(*const u16) -> u32;
         unsafe {
@@ -165,28 +167,61 @@ impl Draw {
 pub extern "C" fn on_draw_interface() {
     // if revealed_areas
     let player = Unit::get();
-    if let Some(player) = player {
-        let player_class = player.get_player_class().unwrap();
-        Draw::draw_text(
-            150,
-            100,
-            TextColor::Gold,
-            Alignment::Center,
-            1,
-            &format!(
-                "Player class: {:?}, type: {:?}",
-                player_class, player.unit_type
-            ),
-        );
+    if let Some(_player) = player {
+        {
+            Draw::draw_text(
+                5,
+                575,
+                TextColor::White,
+                Alignment::None,
+                4,
+                &format!("ÿc1{} ÿc;{}", "Off", "Off"),
+            );
+            Draw::draw_text(
+                5,
+                588,
+                TextColor::White,
+                Alignment::None,
+                4,
+                &format!("ÿc8{} ÿc7{}", "Off", "Off"),
+            );
+            Draw::draw_text(
+                756,
+                575,
+                TextColor::White,
+                Alignment::None,
+                4,
+                &format!("ÿc3{} ÿc;{}", "Off", "Off"),
+            );
+            Draw::draw_text(
+                756,
+                588,
+                TextColor::White,
+                Alignment::None,
+                4,
+                &format!("ÿc8{} ÿc7{}", "Off", "Off"),
+            );
+            // Draw::draw_text(
+            //     375,
+            //     15,
+            //     TextColor::Gold,
+            //     Alignment::None,
+            //     4,
+            //     &format!("{:?}", chrono::offset::Utc::now()),
+            // )
+        }
 
-        let player_pos = player.pos();
+        let y_size = Draw::get_text_size("100%", 0)[0] + 15;
+        Draw::draw_bordered_box(50, 528, y_size, 15, 4, 0, Transparency::Normal);
+        Draw::draw_bordered_box(715, 528, y_size, 15, 4, 0, Transparency::Normal);
+        Draw::draw_text(52 + 2, 528 + 4, TextColor::Gold, Alignment::None, 8, "100%");
         Draw::draw_text(
-            150,
-            120,
+            715 + 2,
+            528 + 4,
             TextColor::Gold,
-            Alignment::Center,
-            1,
-            &format!("Player pos: {:?}", player_pos),
+            Alignment::None,
+            8,
+            "100%",
         );
     }
 }
@@ -194,37 +229,31 @@ pub extern "C" fn on_draw_interface() {
 pub extern "C" fn on_draw_automap() {
     let game_info = GameInfo::get();
     if let Some(game_info) = game_info {
-        let mut info = Vec::new();
-        // Hardcode some game info to the screen
-        info.push("FPS: 200, Skip: 0, Ping: 15");
-        let game_name = format!("Game: {}", game_info.get_game_name());
-        if game_info.get_game_name().len() > 0 {
-            info.push(&game_name);
-        }
-        let game_password = format!("Password: {}", game_info.get_game_password());
-        if game_info.get_game_password().len() > 0 {
-            info.push(&game_password);
-        }
-        info.push("Area: ");
-        info.push("v 1.14d");
-        info.push("Difficulty: ");
-        info.push("EXPANSION");
+        let fps = get_fps().unwrap().to_string();
+        let ping = get_ping().unwrap().to_string();
+        let skip = get_skip().unwrap().to_string();
+        let variables: HashMap<&str, &str> = [
+            ("game_name", game_info.get_game_name()),
+            ("game_password", game_info.get_game_password()),
+            ("fps", &fps),
+            ("ping", &ping),
+            ("skip", &skip),
+            ("game_difficulty", Difficulty::get().unwrap()),
+        ]
+        .into();
 
-        let mut y = 0;
-        info.iter().for_each(|&msg| {
-            y += 16;
-            Draw::draw_text(
-                (get_screen_size_x().unwrap() - 18).try_into().unwrap(),
-                y,
-                TextColor::Gold,
-                Alignment::Right,
-                1,
-                msg,
-            );
+        CONFIG.automap.iter().for_each(|info| {
+            let rendered_messaged = info.render(&variables);
+            if rendered_messaged.len() > 0 {
+                Draw::draw_text(
+                    info.x,
+                    info.y,
+                    info.color,
+                    info.alignment,
+                    info.font,
+                    rendered_messaged.as_str(),
+                );
+            }
         });
-
-        // Draw::draw_box(100, 100, 200, 200, TextColor::Gold, Transparency::Normal);
-        // Draw::draw_line(100, 100, 200, 200, TextColor::White);
-        // Draw::draw_bordered_box(100, 100, 100, 100, 4, 0, Transparency::ThreeFourths);
     }
 }

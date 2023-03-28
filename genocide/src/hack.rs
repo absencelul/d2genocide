@@ -1,11 +1,19 @@
 use log::info;
+use once_cell::sync::Lazy;
 use winapi::shared::minwindef::{BOOL, HINSTANCE, TRUE};
 
 use crate::{
+    config::ui::UiConfig,
     d2::stubs,
     memory::patch::{Patch, PatchType},
     utils::console,
 };
+
+pub static CONFIG: Lazy<UiConfig> = Lazy::new(|| {
+    let mut config = UiConfig::new("C:\\Users\\zmeye\\Documents\\d2genocide\\config\\ui.json");
+    let _ = config.parse();
+    config
+});
 
 #[allow(dead_code)]
 pub struct Hack {

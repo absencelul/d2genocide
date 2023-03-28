@@ -14,6 +14,7 @@ use winapi::{
 mod logging;
 
 mod d2;
+mod config;
 mod hack;
 mod memory;
 mod utils;

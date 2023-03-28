@@ -1,7 +1,7 @@
-use crate::nested;
 use std::{ffi::c_void, mem::transmute, slice};
 
 use super::unit::UnitType;
+use crate::nested;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -66,6 +66,7 @@ pub struct RoomEx {
     pub preset: *const PresetUnit,          // 0x005C
 }
 
+#[allow(dead_code)]
 impl RoomEx {
     fn init(&self, act: &Act) -> bool {
         if self.room.is_null() {
@@ -160,6 +161,7 @@ pub struct Level {
     pad_01d4: [u8; 12],               // 0x01D4
 }
 
+#[allow(dead_code)]
 impl Level {
     fn init(&self) {
         type InitLevelFn = extern "stdcall" fn(*const Level);
@@ -223,4 +225,176 @@ pub struct Act {
     pub level_first: *const Level, // 0x0024
     pad_0028: [u8; 32],            // 0x0028
     pub act_misc: *const ActMisc,  // 0x0048
+}
+
+#[repr(u32)]
+#[allow(unused)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq, Debug)]
+pub enum AreaId {
+    None = 0,
+    RogueEncampment = 1,
+    BloodMoor = 2,
+    ColdPlains = 3,
+    StonyField = 4,
+    DarkWood = 5,
+    BlackMarsh = 6,
+    TamoeHighland = 7,
+    DenOfEvil = 8,
+    CaveLevel1 = 9,
+    UndergroundPassageLevel1 = 10,
+    HoleLevel1 = 11,
+    PitLevel1 = 12,
+    CaveLevel2 = 13,
+    UndergroundPassageLevel2 = 14,
+    HoleLevel2 = 15,
+    PitLevel2 = 16,
+    BurialGrounds = 17,
+    Crypt = 18,
+    Mausoleum = 19,
+    ForgottenTower = 20,
+    TowerCellarLevel1 = 21,
+    TowerCellarLevel2 = 22,
+    TowerCellarLevel3 = 23,
+    TowerCellarLevel4 = 24,
+    TowerCellarLevel5 = 25,
+    MonasteryGate = 26,
+    OuterCloister = 27,
+    Barracks = 28,
+    JailLevel1 = 29,
+    JailLevel2 = 30,
+    JailLevel3 = 31,
+    InnerCloister = 32,
+    Cathedral = 33,
+    CatacombsLevel1 = 34,
+    CatacombsLevel2 = 35,
+    CatacombsLevel3 = 36,
+    CatacombsLevel4 = 37,
+    Tristram = 38,
+    MooMooFarm = 39,
+    LutGholein = 40,
+    RockyWaste = 41,
+    DryHills = 42,
+    FarOasis = 43,
+    LostCity = 44,
+    ValleyOfSnakes = 45,
+    CanyonOfTheMagi = 46,
+    A2SewersLevel1 = 47,
+    A2SewersLevel2 = 48,
+    A2SewersLevel3 = 49,
+    HaremLevel1 = 50,
+    HaremLevel2 = 51,
+    PalaceCellarLevel1 = 52,
+    PalaceCellarLevel2 = 53,
+    PalaceCellarLevel3 = 54,
+    StonyTombLevel1 = 55,
+    HallsOfTheDeadLevel1 = 56,
+    HallsOfTheDeadLevel2 = 57,
+    ClawViperTempleLevel1 = 58,
+    StonyTombLevel2 = 59,
+    HallsOfTheDeadLevel3 = 60,
+    ClawViperTempleLevel2 = 61,
+    MaggotLairLevel1 = 62,
+    MaggotLairLevel2 = 63,
+    MaggotLairLevel3 = 64,
+    AncientTunnels = 65,
+    TalRashasTomblevel1 = 66,
+    TalRashasTomblevel2 = 67,
+    TalRashasTomblevel3 = 68,
+    TalRashasTomblevel4 = 69,
+    TalRashasTomblevel5 = 70,
+    TalRashasTomblevel6 = 71,
+    TalRashasTomblevel7 = 72,
+    DurielsLair = 73,
+    ArcaneSanctuary = 74,
+    KurastDocktown = 75,
+    SpiderForest = 76,
+    GreatMarsh = 77,
+    FlayerJungle = 78,
+    LowerKurast = 79,
+    KurastBazaar = 80,
+    UpperKurast = 81,
+    KurastCauseway = 82,
+    Travincal = 83,
+    SpiderCave = 84,
+    SpiderCavern = 85,
+    SwampyPitLevel1 = 86,
+    SwampyPitLevel2 = 87,
+    FlayerDungeonLevel1 = 88,
+    FlayerDungeonLevel2 = 89,
+    SwampyPitLevel3 = 90,
+    FlayerDungeonLevel3 = 91,
+    A3SewersLevel1 = 92,
+    A3SewersLevel2 = 93,
+    RuinedTemple = 94,
+    DisusedFane = 95,
+    ForgottenReliquary = 96,
+    ForgottenTemple = 97,
+    RuinedFane = 98,
+    DisusedReliquary = 99,
+    DuranceOfHateLevel1 = 100,
+    DuranceOfHateLevel2 = 101,
+    DuranceOfHateLevel3 = 102,
+    ThePandemoniumFortress = 103,
+    OuterSteppes = 104,
+    PlainsOfDespair = 105,
+    CityOfTheDamned = 106,
+    RiverOfFlame = 107,
+    ChaosSanctuary = 108,
+    Harrogath = 109,
+    BloodyFoothills = 110,
+    FrigidHighlands = 111,
+    ArreatPlateau = 112,
+    CrystalizedPassage = 113,
+    FrozenRiver = 114,
+    GlacialTrail = 115,
+    DrifterCavern = 116,
+    FrozenTundra = 117,
+    AncientsWay = 118,
+    IcyCellar = 119,
+    ArreatSummit = 120,
+    NihlathaksTemple = 121,
+    HallsOfAnguish = 122,
+    HallsOfPain = 123,
+    HallsOfVaught = 124,
+    Abaddon = 125,
+    PitOfAcheron = 126,
+    InfernalPit = 127,
+    TheWorldstoneKeepLevel1 = 128,
+    TheWorldstoneKeepLevel2 = 129,
+    TheWorldstoneKeepLevel3 = 130,
+    ThroneOfDestruction = 131,
+    TheWorldstoneChamber = 132,
+    MatronsDen = 133,
+    FogottenSands = 134,
+    FurnaceOfPain = 135,
+    Tristram2 = 136,
+}
+
+#[allow(dead_code)]
+impl AreaId {
+    pub fn is_town(&self) -> bool {
+        matches!(
+            self,
+            Self::RogueEncampment
+                | Self::LutGholein
+                | Self::KurastDocktown
+                | Self::ThePandemoniumFortress
+                | Self::Harrogath
+                | Self::None
+        )
+    }
+
+    // pub fn get_name(&self) -> &str {
+    //     type GetLevelNameFn = extern "fastcall" fn(u32) -> *const u16;
+    //     let level_name = unsafe {
+    //         let level_name = transmute::<usize, GetLevelNameFn>(0x53E70)(self as *const _ as u32);
+    //         let mut len = 0;
+    //         while *level_name.add(len) != 0 {
+    //             len += 1;
+    //         }
+    //         let level_name = std::slice::from_raw_parts(level_name, len);
+    //         String::from_utf16_lossy(level_name)
+    //     };
+    //     level_name.as_str()
+    // }
 }
