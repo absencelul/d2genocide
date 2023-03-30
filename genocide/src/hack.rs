@@ -3,7 +3,7 @@ use once_cell::sync::Lazy;
 use winapi::shared::minwindef::{BOOL, HINSTANCE, TRUE};
 
 use crate::{
-    config::ui::UiConfig,
+    config::{settings::Settings, ui::UiConfig},
     d2::stubs,
     memory::patch::{Patch, PatchType},
     utils::console,
@@ -13,6 +13,13 @@ pub static CONFIG: Lazy<UiConfig> = Lazy::new(|| {
     let mut config = UiConfig::new("C:\\Users\\zmeye\\Documents\\d2genocide\\config\\ui.json");
     let _ = config.parse();
     config
+});
+
+pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
+    let mut settings =
+        Settings::new("C:\\Users\\zmeye\\Documents\\d2genocide\\config\\settings.json");
+    let _ = settings.parse();
+    settings
 });
 
 #[allow(dead_code)]

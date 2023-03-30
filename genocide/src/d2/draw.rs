@@ -7,7 +7,10 @@ use super::{
     game::{get_fps, get_ping, get_skip, Difficulty, GameInfo},
     unit::Unit,
 };
-use crate::hack::CONFIG;
+use crate::{
+    hack::{CONFIG, SETTINGS},
+    modules::chicken,
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[repr(u8)]
@@ -163,95 +166,139 @@ impl Draw {
     }
 }
 
+fn prepare_hashmap() -> Option<HashMap<&'static str, String>> {
+    if let Some(player) = Unit::get() {
+        let game_info = GameInfo::get().unwrap();
+        let fps = get_fps().unwrap().to_string();
+        let ping = get_ping().unwrap().to_string();
+        let skip = get_skip().unwrap().to_string();
+        let variables: HashMap<&str, String> = [
+            ("game_name", game_info.get_game_name().to_string()),
+            ("game_password", game_info.get_game_password().to_string()),
+            ("fps", fps),
+            ("ping", ping),
+            ("skip", skip),
+            ("game_difficulty", Difficulty::get().to_string()),
+            ("area_name", player.get_area_id().get_name()),
+            (
+                "town_life",
+                if SETTINGS.chicken.town_life >= 0 {
+                    SETTINGS.chicken.town_life.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "town_mana",
+                if SETTINGS.chicken.town_mana >= 0 {
+                    SETTINGS.chicken.town_mana.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "exit_life",
+                if SETTINGS.chicken.exit_life >= 0 {
+                    SETTINGS.chicken.exit_life.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "exit_mana",
+                if SETTINGS.chicken.exit_mana >= 0 {
+                    SETTINGS.chicken.exit_mana.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "potion_life",
+                if SETTINGS.chicken.potion_life >= 0 {
+                    SETTINGS.chicken.potion_life.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "rejuv_life",
+                if SETTINGS.chicken.rejuv_life >= 0 {
+                    SETTINGS.chicken.rejuv_life.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "potion_mana",
+                if SETTINGS.chicken.potion_mana >= 0 {
+                    SETTINGS.chicken.potion_mana.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "rejuv_mana",
+                if SETTINGS.chicken.rejuv_mana >= 0 {
+                    SETTINGS.chicken.rejuv_mana.to_string()
+                } else {
+                    "Off".to_string()
+                },
+            ),
+            (
+                "life_percent",
+                player.get_current_hp_percent().unwrap().to_string(),
+            ),
+            (
+                "mana_percent",
+                player.get_current_mana_percent().unwrap().to_string(),
+            ),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        return Some(variables);
+    }
+    None
+}
+
 // TODO: Move these to a plugin
 pub extern "C" fn on_draw_interface() {
     // if revealed_areas
     let player = Unit::get();
     if let Some(_player) = player {
-        {
-            Draw::draw_text(
-                5,
-                575,
-                TextColor::White,
-                Alignment::None,
-                4,
-                &format!("ÿc1{} ÿc;{}", "Off", "Off"),
-            );
-            Draw::draw_text(
-                5,
-                588,
-                TextColor::White,
-                Alignment::None,
-                4,
-                &format!("ÿc8{} ÿc7{}", "Off", "Off"),
-            );
-            Draw::draw_text(
-                756,
-                575,
-                TextColor::White,
-                Alignment::None,
-                4,
-                &format!("ÿc3{} ÿc;{}", "Off", "Off"),
-            );
-            Draw::draw_text(
-                756,
-                588,
-                TextColor::White,
-                Alignment::None,
-                4,
-                &format!("ÿc8{} ÿc7{}", "Off", "Off"),
-            );
-            // Draw::draw_text(
-            //     375,
-            //     15,
-            //     TextColor::Gold,
-            //     Alignment::None,
-            //     4,
-            //     &format!("{:?}", chrono::offset::Utc::now()),
-            // )
-        }
+        chicken::run();
 
-        let y_size = Draw::get_text_size("100%", 0)[0] + 15;
-        Draw::draw_bordered_box(50, 528, y_size, 15, 4, 0, Transparency::Normal);
-        Draw::draw_bordered_box(715, 528, y_size, 15, 4, 0, Transparency::Normal);
-        Draw::draw_text(52 + 2, 528 + 4, TextColor::Gold, Alignment::None, 8, "100%");
-        Draw::draw_text(
-            715 + 2,
-            528 + 4,
-            TextColor::Gold,
-            Alignment::None,
-            8,
-            "100%",
-        );
-    }
-}
-
-pub extern "C" fn on_draw_automap() {
-    let game_info = GameInfo::get();
-    if let Some(game_info) = game_info {
-        let fps = get_fps().unwrap().to_string();
-        let ping = get_ping().unwrap().to_string();
-        let skip = get_skip().unwrap().to_string();
-        let variables: HashMap<&str, &str> = [
-            ("game_name", game_info.get_game_name()),
-            ("game_password", game_info.get_game_password()),
-            ("fps", &fps),
-            ("ping", &ping),
-            ("skip", &skip),
-            ("game_difficulty", Difficulty::get().unwrap()),
-        ]
-        .into();
-
-        CONFIG.automap.iter().for_each(|info| {
-            let rendered_messaged = info.render(&variables);
-            if rendered_messaged.len() > 0 {
+        let variables = prepare_hashmap().unwrap();
+        CONFIG.screen.iter().for_each(|info| {
+            let rendered_message = info.render(&variables);
+            if !rendered_message.is_empty() {
                 Draw::draw_text(
                     info.x,
                     info.y,
                     info.color,
                     info.alignment,
                     info.font,
-                    rendered_messaged.as_str(),
+                    rendered_message.as_str(),
+                );
+            }
+        });
+    }
+}
+
+pub extern "C" fn on_draw_automap() {
+    let game_info = GameInfo::get();
+    if let Some(_game_info) = game_info {
+        let variables = prepare_hashmap().unwrap();
+        CONFIG.automap.iter().for_each(|info| {
+            let rendered_message = info.render(&variables);
+            if !rendered_message.is_empty() {
+                Draw::draw_text(
+                    info.x,
+                    info.y,
+                    info.color,
+                    info.alignment,
+                    info.font,
+                    rendered_message.as_str(),
                 );
             }
         });

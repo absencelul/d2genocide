@@ -1,15 +1,15 @@
 {
   "automap": [
     {
-      "x": 582,
+      "x": 790,
       "y": 16,
-      "color": "Gold",
+      "color": "Orange",
       "alignment": "Right",
-      "font": 1,
+      "font": 8,
       "message": "FPS: {fps}, Skip: {skip}, Ping: {ping}"
     },
     {
-      "x": 582,
+      "x": 790,
       "y": 32,
       "color": "Gold",
       "alignment": "Right",
@@ -17,7 +17,7 @@
       "message": "Game: {game_name}"
     },
     {
-      "x": 582,
+      "x": 790,
       "y": 48,
       "color": "Gold",
       "alignment": "Right",
@@ -25,13 +25,70 @@
       "message": "Password: {game_password}"
     },
     {
-      "x": 582,
+      "x": 790,
       "y": 64,
       "color": "Gold",
       "alignment": "Right",
       "font": 1,
       "message": "Difficulty: {game_difficulty}"
+    },
+    {
+      "x": 790,
+      "y": 80,
+      "color": "Gold",
+      "alignment": "Right",
+      "font": 1,
+      "message": "{area_name}"
     }
   ],
-  "screen": []
+  "screen": [
+    {
+      "x": 5,
+      "y": 575,
+      "color": "White",
+      "alignment": "None",
+      "font": 4,
+      "message": "ÿc1{potion_life} ÿc;{rejuv_life}"
+    },
+    {
+      "x": 5,
+      "y": 588,
+      "color": "White",
+      "alignment": "None",
+      "font": 4,
+      "message": "ÿc8{town_life} ÿc7{exit_life}"
+    },
+    {
+      "x": 796,
+      "y": 575,
+      "color": "White",
+      "alignment": "Right",
+      "font": 4,
+      "message": "ÿc3{potion_mana} ÿc;{rejuv_mana}"
+    },
+    {
+      "x": 796,
+      "y": 588,
+      "color": "White",
+      "alignment": "Right",
+      "font": 4,
+      "message": "ÿc8{town_mana} ÿc7{exit_mana}"
+    },
+    {
+      "x": 56,
+      "y": 531,
+      "color": "Gold",
+      "alignment": "None",
+      "font": 8,
+      "message": "{life_percent}%"
+    },
+    {
+      "x": 721,
+      "y": 531,
+      "color": "Gold",
+      "alignment": "None",
+      "font": 8,
+      "message": "{mana_percent}%"
+    }
+  ]
 }

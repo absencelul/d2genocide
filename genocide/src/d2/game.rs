@@ -1,7 +1,16 @@
-use std::{ffi::c_char, mem::transmute};
+use std::{
+    ffi::c_char,
+    fmt::{Display, Formatter},
+    mem::transmute,
+};
 use widestring::WideCString;
 
 use super::draw::TextColor;
+
+pub fn exit_game() {
+    type ExitGameFn = extern "fastcall" fn();
+    unsafe { transmute::<usize, ExitGameFn>(0x44DD60)() };
+}
 
 pub fn get_ping() -> Option<u32> {
     let ping: *const u32 = 0x7A04A4 as *const u32;
@@ -135,30 +144,28 @@ impl GameInfo {
     }
 }
 
+#[repr(u8)]
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum Difficulty {
     Normal = 0,
-    Nightmare = 1,
-    Hell = 2,
+    Nightmare,
+    Hell,
 }
 
-impl Difficulty {
-    fn to_string(&self) -> &str {
-        match self {
+impl Display for Difficulty {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
             Difficulty::Normal => "Normal",
             Difficulty::Nightmare => "Nightmare",
             Difficulty::Hell => "Hell",
-        }
+        };
+        write!(f, "{}", s)
     }
+}
 
-    pub fn get() -> Option<&'static str> {
-        let difficulty = unsafe { transmute::<usize, fn() -> u8>(0x44DCD0)() };
-
-        match difficulty {
-            0 => Some(Difficulty::Normal.to_string()),
-            1 => Some(Difficulty::Nightmare.to_string()),
-            2 => Some(Difficulty::Hell.to_string()),
-            _ => None,
-        }
+impl Difficulty {
+    pub fn get() -> Self {
+        unsafe { transmute::<usize, fn() -> Difficulty>(0x44DCD0)() }
     }
 }

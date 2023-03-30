@@ -1,0 +1,12 @@
+{
+    "chicken": {
+        "town_life": 80,
+        "exit_life": 45,
+        "town_mana": -1,
+        "exit_mana": -1,
+        "potion_life": -1,
+        "rejuv_life": -1,
+        "potion_mana": 20,
+        "rejuv_mana": -1
+    }
+}

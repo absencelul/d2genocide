@@ -13,10 +13,11 @@ use winapi::{
 #[cfg(feature = "logging")]
 mod logging;
 
-mod d2;
 mod config;
+mod d2;
 mod hack;
 mod memory;
+mod modules;
 mod utils;
 
 #[no_mangle]

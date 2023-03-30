@@ -1,6 +1,9 @@
 use std::{ffi::c_void, mem::transmute, slice};
 
-use super::unit::UnitType;
+use log::debug;
+use widestring::WideCString;
+
+use super::unit::{Unit, UnitType};
 use crate::nested;
 
 #[derive(Debug)]
@@ -74,7 +77,11 @@ impl RoomEx {
             type AddRoomDataFn = extern "stdcall" fn(*const Act, u32, u32, u32, *const Room);
             unsafe {
                 transmute::<usize, AddRoomDataFn>(0x61A070)(
-                    act, area, self.pos_x, self.pos_y, self.room,
+                    act,
+                    area as u32,
+                    self.pos_x,
+                    self.pos_y,
+                    self.room,
                 );
             }
             return true;
@@ -87,7 +94,11 @@ impl RoomEx {
         type RemoveRoomDataFn = extern "stdcall" fn(*const Act, u32, u32, u32, *const Room);
         unsafe {
             transmute::<usize, RemoveRoomDataFn>(0x61A0C0)(
-                act, area, self.pos_x, self.pos_y, self.room,
+                act,
+                area as u32,
+                self.pos_x,
+                self.pos_y,
+                self.room,
             );
         }
     }
@@ -125,7 +136,7 @@ pub struct Room {
     pub size_x: u32,                        // 0x0054
     pub size_y: u32,                        // 0x0058
     pad_005c: [u8; 24],                     // 0x005C
-    unit_first: *const c_void,              // 0x0074
+    pub unit_first: *const Unit,            // 0x0074
     pad_0078: [u8; 4],                      // 0x0078
     pub room_next: *const Room,             // 0x007C
 }
@@ -157,7 +168,7 @@ pub struct Level {
     pad_01b8: [u8; 12],               // 0x01B8
     pub seed: [u32; 2],               // 0x01C4
     pad_01cc: [u8; 4],                // 0x01CC
-    pub level_no: u32,                // 0x01D0
+    pub level_no: AreaId,             // 0x01D0
     pad_01d4: [u8; 12],               // 0x01D4
 }
 
@@ -384,17 +395,13 @@ impl AreaId {
         )
     }
 
-    // pub fn get_name(&self) -> &str {
-    //     type GetLevelNameFn = extern "fastcall" fn(u32) -> *const u16;
-    //     let level_name = unsafe {
-    //         let level_name = transmute::<usize, GetLevelNameFn>(0x53E70)(self as *const _ as u32);
-    //         let mut len = 0;
-    //         while *level_name.add(len) != 0 {
-    //             len += 1;
-    //         }
-    //         let level_name = std::slice::from_raw_parts(level_name, len);
-    //         String::from_utf16_lossy(level_name)
-    //     };
-    //     level_name.as_str()
-    // }
+    pub fn get_name(&self) -> String {
+        type GetLevelNameFn = extern "fastcall" fn(AreaId) -> *const u16;
+        let level_name = unsafe {
+            let level_name = transmute::<usize, GetLevelNameFn>(0x453E70)(*self);
+            let wide_cstr = WideCString::from_ptr_str(level_name);
+            wide_cstr.to_string_lossy()
+        };
+        level_name
+    }
 }

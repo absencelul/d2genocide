@@ -2,7 +2,34 @@ use smallvec::{smallvec, SmallVec};
 use std::mem::transmute;
 use winapi::ctypes::c_void;
 
-use super::area::{Act, Room};
+use crate::nested;
+
+use super::{
+    area::{Act, AreaId, Room},
+    stats::StatId,
+};
+
+#[repr(C)]
+#[allow(unused)]
+#[derive(Clone, Copy)]
+pub enum NpcUnitMode {
+    Death,
+    Stand,
+    Walk,
+    BeingHit,
+    Attack1,
+    Attack2,
+    Block,
+    Cast,
+    UseSkill1,
+    UseSkill2,
+    UseSkill3,
+    UseSkill4,
+    Dead,
+    KnockedBack,
+    Sequence,
+    Run,
+}
 
 #[repr(u32)]
 #[allow(unused)]
@@ -160,6 +187,97 @@ impl Unit {
             return None;
         }
         return Some(unsafe { std::mem::transmute::<u32, PlayerClass>(self.class_id) });
+    }
+
+    pub fn get_unit_stat(&self, stat: StatId) -> Option<i32> {
+        type GetUnitStatFn = extern "stdcall" fn(*const Unit, stat: StatId, stat_2: i32) -> i32;
+        let stat = unsafe {
+            let stat = transmute::<usize, GetUnitStatFn>(0x625480)(self, stat, 0);
+            if stat < 0 {
+                return None;
+            }
+            stat
+        };
+        Some(stat)
+    }
+
+    pub fn get_current_hp_percent(&self) -> Option<i32> {
+        if self.unit_type != UnitType::Player {
+            return None;
+        }
+        let life = self.get_unit_stat(StatId::Life);
+        let max_life = self.get_unit_stat(StatId::MaxLife);
+        if life.is_none() || max_life.is_none() {
+            return None;
+        }
+        let life = life.unwrap();
+        let max_life = max_life.unwrap();
+        let mut value = ((life as f32 / max_life as f32) * 100.0) as i32;
+        if value > 100 {
+            value = 100;
+        }
+        Some(value)
+    }
+
+    pub fn get_current_mana_percent(&self) -> Option<i32> {
+        if self.unit_type != UnitType::Player {
+            return None;
+        }
+        let mana = self.get_unit_stat(StatId::Mana);
+        let max_mana = self.get_unit_stat(StatId::MaxMana);
+        if mana.is_none() || max_mana.is_none() {
+            return None;
+        }
+        let mana = mana.unwrap();
+        let max_mana = max_mana.unwrap();
+        let mut value = ((mana as f32 / max_mana as f32) * 100.0) as i32;
+        if value > 100 {
+            value = 100;
+        }
+        Some(value)
+    }
+
+    pub fn get_area_id(&self) -> AreaId {
+        let level = nested!(self.path->dynamic_path->room->room_ex->level);
+        match level {
+            Some(level) => level.level_no,
+            None => AreaId::None,
+        }
+    }
+
+    pub fn get_monster_owner_id(unit_id: u32) -> u32 {
+        type GetMonsterOwnerIdFn = extern "fastcall" fn(u32) -> u32;
+        unsafe {
+            let owner_id = transmute::<usize, GetMonsterOwnerIdFn>(0x479150)(unit_id);
+            return owner_id;
+        }
+    }
+
+    pub fn get_player_merc(&self) -> Option<&'static Unit> {
+        if self.unit_type != UnitType::Player {
+            return None;
+        }
+        let mut room_opt = nested!(self->act->room);
+        while let Some(room) = room_opt {
+            let mut unit_opt = nested!(room->unit_first);
+            while let Some(unit) = unit_opt {
+                match unit.class_id {
+                    0x010f | 0x0152 | 0x0167 | 0x0231 => {
+                        if Self::get_monster_owner_id(unit.unit_id) == self.unit_id
+                            && unit.mode != NpcUnitMode::Dead as u32
+                            && unit.mode != NpcUnitMode::Death as u32
+                        {
+                            return Some(&*unit);
+                        }
+                    }
+                    _ => {}
+                }
+                unit_opt = nested!(unit->list_next);
+            }
+
+            room_opt = nested!(room->room_next);
+        }
+        None
     }
 
     fn pos_is_static(&self) -> bool {

@@ -24,7 +24,7 @@ impl UiInfoConfig {
         template
     }
 
-    pub fn render(&self, variables: &HashMap<&str, &str>) -> String {
+    pub fn render(&self, variables: &HashMap<&str, String>) -> String {
         let tt = self.create_tiny_template();
         let msg = tt.render("message", variables).unwrap();
         msg
